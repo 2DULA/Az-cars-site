@@ -1,17 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import AuthButton from "./AuthButton";
 import { useState } from "react";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { dictionary } from "@/lib/i18n/dictionary";
 import { Moon, User, ChevronDown, Languages, Coins } from "lucide-react";
 
-const NAV_LINKS = [
-    { href: "/", label: "الرئيسية" },
-    { href: "/cars", label: "السيارات" },
-    { href: "/auctions", label: "المزادات" },
-    { href: "/parts", label: "قطع غيار" },
-    { href: "/about", label: "من نحن" },
-    { href: "/contact", label: "تواصل" },
-];
 
 const LANGUAGES = [
     { code: "ar", label: "العربية SA" },
@@ -24,7 +19,17 @@ const CURRENCIES = [
 ];
 
 export default function Header() {
-    const [lang, setLang] = useState(LANGUAGES[0]);
+    const { lang, setLang } = useLanguage();
+    const t = dictionary[lang];
+
+    const NAV_LINKS = [
+        { href: "/", label: t.nav.home },
+        { href: "/cars", label: t.nav.cars },
+        { href: "/auctions", label: t.nav.auctions },
+        { href: "/parts", label: t.nav.parts },
+        { href: "/about", label: t.nav.about },
+        { href: "/contact", label: t.nav.contact },
+    ];
     const [currency, setCurrency] = useState(CURRENCIES[0]);
     const [langOpen, setLangOpen] = useState(false);
     const [currencyOpen, setCurrencyOpen] = useState(false);
@@ -101,7 +106,7 @@ export default function Header() {
                             <div className="flex h-5 w-5 items-center justify-center rounded-full bg-paper text-steel">
                                 <Languages size={12} />
                             </div>
-                            {lang.label}
+                            {LANGUAGES.find((l) => l.code === lang)?.label}
                             <ChevronDown size={14} className="text-ink/50" />
                         </button>
                         {langOpen && (
@@ -110,7 +115,7 @@ export default function Header() {
                                     <button
                                         key={l.code}
                                         onClick={() => {
-                                            setLang(l);
+                                            setLang(l.code as "ar" | "en");
                                             setLangOpen(false);
                                         }}
                                         className="block w-full px-4 py-2.5 text-start font-mono text-sm text-ink/80 hover:bg-paper"
@@ -118,6 +123,7 @@ export default function Header() {
                                         {l.label}
                                     </button>
                                 ))}
+                                ))
                             </div>
                         )}
                     </div>
@@ -129,10 +135,7 @@ export default function Header() {
                         <Moon size={18} />
                     </button>
 
-                    <button className="flex items-center gap-2.5 rounded-full bg-ink px-7 py-2.5 font-display text-sm font-bold text-white shadow-sm transition-all hover:bg-steel">
-                        <User size={16} />
-                        دخول
-                    </button>
+                    <AuthButton />
                 </div>
             </div>
         </header>
