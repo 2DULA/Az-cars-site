@@ -4,10 +4,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { dictionary } from "@/lib/i18n/dictionary";
+import { Mail, Lock } from "lucide-react";
 
 export default function SignInPage() {
     const router = useRouter();
     const supabase = createClient();
+    const { lang } = useLanguage();
+    const t = dictionary[lang].auth;
+    const isRtl = lang === "ar";
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -35,62 +41,86 @@ export default function SignInPage() {
     }
 
     return (
-        <main className= "mx-auto max-w-md px-4 py-16" dir = "rtl" >
-            <h1 className="font-display text-2xl font-bold text-center" >
-                تسجيل الدخول
+        <main
+            className="relative flex min-h-[80vh] w-full items-center justify-center px-4 py-12 sm:py-20"
+            dir={isRtl ? "rtl" : "ltr"}
+        >
+            <div className="absolute top-1/4 left-1/2 -z-10 h-72 w-72 -translate-x-1/2 rounded-full bg-steel/10 blur-[100px] pointer-events-none" />
+            <div className="absolute bottom-1/4 left-1/3 -z-10 h-64 w-64 rounded-full bg-amber/5 blur-[120px] pointer-events-none" />
+
+            <div className="w-full max-w-md rounded-2xl border border-line bg-paper/60 p-8 shadow-xl shadow-ink/5 backdrop-blur-md sm:p-10">
+                <div className="text-center">
+                    <h1 className="font-display text-3xl font-bold text-ink">
+                        {t.signInTitle}
                     </h1>
+                    <p className="mt-2 text-sm text-ink/60">
+                        {isRtl ? "مرحباً بك مجدداً في معرض العز" : "Welcome back to Al-Ezz Exhibition"}
+                    </p>
+                </div>
 
-                    < form onSubmit = { handleSubmit } className = "mt-8 space-y-5" >
-                        <div>
-                        <label className="mb-1.5 block text-sm font-semibold" >
-                            البريد الإلكتروني
-                                </label>
-                                < input
-    type = "email"
-    value = { email }
-    onChange = {(e) => setEmail(e.target.value)
-}
-required
-className = "w-full border border-line px-4 py-3 text-sm outline-none focus:border-steel"
-    />
-    </div>
+                <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-wider text-ink/75">
+                            {t.email}
+                        </label>
+                        <div className="relative">
+                            <span className={`absolute inset-y-0 ${isRtl ? 'right-4' : 'left-4'} flex items-center text-ink/40`}>
+                                <Mail size={16} />
+                            </span>
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                placeholder="name@example.com"
+                                className={`w-full rounded-xl border border-line bg-paper/40 py-3.5 ${isRtl ? 'pl-4 pr-11' : 'pl-11 pr-4'} text-sm text-ink outline-none transition-all focus:border-steel focus:bg-paper focus:ring-2 focus:ring-steel/10`}
+                            />
+                        </div>
+                    </div>
 
-    < div >
-    <label className="mb-1.5 block text-sm font-semibold" >
-        كلمة المرور
-            </label>
-            < input
-type = "password"
-value = { password }
-onChange = {(e) => setPassword(e.target.value)}
-required
-className = "w-full border border-line px-4 py-3 text-sm outline-none focus:border-steel"
-    />
-    </div>
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-wider text-ink/75">
+                            {t.password}
+                        </label>
+                        <div className="relative">
+                            <span className={`absolute inset-y-0 ${isRtl ? 'right-4' : 'left-4'} flex items-center text-ink/40`}>
+                                <Lock size={16} />
+                            </span>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                placeholder="••••••••"
+                                className={`w-full rounded-xl border border-line bg-paper/40 py-3.5 ${isRtl ? 'pl-4 pr-11' : 'pl-11 pr-4'} text-sm text-ink outline-none transition-all focus:border-steel focus:bg-paper focus:ring-2 focus:ring-steel/10`}
+                            />
+                        </div>
+                    </div>
 
-{
-    error && (
-        <p className="text-sm text-red-600 border border-red-200 bg-red-50 rounded p-3" >
-            { error }
-            </p>
-        )
-}
+                    {error && (
+                        <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3.5 text-sm text-red-500">
+                            {error}
+                        </div>
+                    )}
 
-<button
-          type="submit"
-disabled = { loading }
-className = "w-full bg-ink py-3 font-mono text-sm text-paper hover:bg-steel disabled:opacity-50"
-    >
-    { loading? "جاري الدخول...": "دخول" }
-    </button>
-    </form>
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full rounded-xl bg-steel py-4 font-mono text-sm font-bold text-white shadow-sm transition-all hover:bg-ink hover:text-paper active:scale-[0.98] disabled:opacity-50"
+                    >
+                        {loading ? t.signingIn : t.signIn}
+                    </button>
+                </form>
 
-    < p className = "mt-6 text-center text-sm text-ink/60" >
-        ليس لديك حساب؟{ " " }
-<Link href="/signup" className = "text-steel underline" >
-    إنشاء حساب جديد
-        </Link>
-        </p>
+                <div className="mt-8 border-t border-line/60 pt-6 text-center">
+                    <p className="text-sm text-ink/65">
+                        {t.noAccount}{" "}
+                        <Link href="/signup" className="font-bold text-steel hover:underline transition-colors">
+                            {t.goToSignUp}
+                        </Link>
+                    </p>
+                </div>
+            </div>
         </main>
-  );
+    );
 }

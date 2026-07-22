@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { formatSAR } from "@/lib/format";
+import { formatPrice } from "@/lib/format";
+import { useCurrency } from "@/lib/currency/CurrencyContext";
 import { Gauge, Fuel, Clock, Gavel } from "lucide-react";
 
 interface AuctionListing {
@@ -43,6 +44,7 @@ export default function AuctionCard({
     car: AuctionListing;
     url: string;
 }) {
+    const { currency } = useCurrency();
     const usdEquivalent = car.price_krw
         ? Math.round(Number(car.price_krw) * 0.00077)
         : 0;
@@ -51,11 +53,10 @@ export default function AuctionCard({
     return (
         <Link
             href={url}
-            className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-steel hover:shadow-md"
+            className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-paper shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-steel hover:shadow-md"
         >
             <div className="relative aspect-[4/3] w-full overflow-hidden bg-paper">
                 {car.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                         src={`/api/image-proxy?url=${encodeURIComponent(car.image)}`}
                         alt={`${car.brand} ${car.model}`}
@@ -69,20 +70,20 @@ export default function AuctionCard({
                 )}
 
                 <div className="absolute start-3 top-3 flex flex-wrap gap-2">
-                    <span className="flex items-center gap-1 rounded-full bg-ink/90 px-2.5 py-1 text-xs font-bold text-white shadow-sm backdrop-blur-md">
+                    <span className="flex items-center gap-1 rounded-full bg-black/80 px-2.5 py-1 text-xs font-bold text-white shadow-sm backdrop-blur-md">
                         <Gavel size={14} />
                         مزاد
                     </span>
                 </div>
 
                 {car.auction_date && (
-                    <div
-                        className="absolute bottom-3 start-3 flex items-center gap-1.5 rounded-full bg-ink/90 px-3 py-1.5 font-mono text-xs text-white"
-                        suppressHydrationWarning
-                    >
-                        <Clock size={12} />
-                        {countdown}
-                    </div>
+                   <div
+                   className="absolute bottom-3 start-3 flex items-center gap-1.5 rounded-full bg-black/80 px-3 py-1.5 font-mono text-xs text-white"
+                   suppressHydrationWarning
+               >
+                   <Clock size={12} />
+                   {countdown}
+               </div>
                 )}
             </div>
 
@@ -92,7 +93,7 @@ export default function AuctionCard({
                         {car.brand}
                     </p>
                     {car.fuel && (
-                        <span className="shrink-0 rounded-md bg-paper px-2 py-1 font-mono text-xs font-semibold text-steel">
+                        <span className="shrink-0 rounded-md bg-line/30 px-2 py-1 font-mono text-xs font-semibold text-steel">
                             {car.fuel}
                         </span>
                     )}
@@ -126,7 +127,7 @@ export default function AuctionCard({
                         className="font-display text-2xl font-bold text-ink"
                         suppressHydrationWarning
                     >
-                        {formatSAR(usdEquivalent)}
+                        {formatPrice(usdEquivalent, currency)}
                     </span>
                 </div>
             </div>

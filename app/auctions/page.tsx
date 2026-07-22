@@ -16,15 +16,40 @@ interface AuctionListing {
     engine: string | null;
     image: string | null;
     auction_date: string | null;
-
 }
 
 const PAGE_SIZE = 20;
 
+type SearchParams = {
+    page?: string;
+    search?: string;
+    brand?: string;
+    fuel?: string;
+    transmission?: string;
+    min_year?: string;
+    max_year?: string;
+    min_price?: string;
+    max_price?: string;
+};
+
+function buildPageUrl(sp: SearchParams, page: number): string {
+    const params = new URLSearchParams();
+    if (sp.search) params.set("search", sp.search);
+    if (sp.brand) params.set("brand", sp.brand);
+    if (sp.fuel) params.set("fuel", sp.fuel);
+    if (sp.transmission) params.set("transmission", sp.transmission);
+    if (sp.min_year) params.set("min_year", sp.min_year);
+    if (sp.max_year) params.set("max_year", sp.max_year);
+    if (sp.min_price) params.set("min_price", sp.min_price);
+    if (sp.max_price) params.set("max_price", sp.max_price);
+    params.set("page", String(page));
+    return `/auctions?${params.toString()}`;
+}
+
 export default async function AuctionsPage({
     searchParams,
 }: {
-    searchParams: Promise<{ page?: string; search?: string; fuel?: string; transmission?: string }>;
+    searchParams: Promise<SearchParams>;
 }) {
     const sp = await searchParams;
     const currentPage = Math.max(1, Number(sp.page) || 1);
@@ -40,12 +65,23 @@ export default async function AuctionsPage({
             const haystack = `${car.brand || ""} ${car.model || ""} ${car.trim || ""}`;
             if (!haystack.includes(q)) return false;
         }
-        if (sp.fuel) {
-            if (!(car.fuel || "").includes(sp.fuel.trim())) return false;
+        if (sp.brand && car.brand !== sp.brand) return false;
+        if (sp.fuel && car.fuel !== sp.fuel) return false;
+        if (sp.transmission && car.transmission !== sp.transmission) return false;
+
+        if (sp.min_year || sp.max_year) {
+            const yearMatch = (car.trim || "").match(/\b(19|20)\d{2}\b/);
+            const year = yearMatch ? Number(yearMatch[0]) : null;
+            if (sp.min_year && (!year || year < Number(sp.min_year))) return false;
+            if (sp.max_year && (!year || year > Number(sp.max_year))) return false;
         }
-        if (sp.transmission) {
-            if (!(car.transmission || "").includes(sp.transmission.trim())) return false;
+
+        if (sp.min_price || sp.max_price) {
+            const usd = car.price_krw ? Number(car.price_krw) * 0.00077 * 3.75 : 0;
+            if (sp.min_price && usd < Number(sp.min_price)) return false;
+            if (sp.max_price && usd > Number(sp.max_price)) return false;
         }
+
         return true;
     });
 
@@ -70,12 +106,12 @@ export default async function AuctionsPage({
             </div>
 
             <div className="flex flex-col gap-6 lg:flex-row">
-                <AuctionFilters />
+                <AuctionFilters allListings={allListings} />
 
                 <section className="flex-1">
                     {listings.length === 0 ? (
-                        <div className="border border-line bg-white p-10 text-center">
-                            <p className="font-display text-lg font-semibold">
+                        <div className="border border-line bg-paper p-10 text-center">
+                            <p className="font-display text-lg font-semibold text-ink">
                                 لا توجد سيارات مطابقة
                             </p>
                             <p className="mt-1 text-sm text-ink/60">
@@ -98,7 +134,7 @@ export default async function AuctionsPage({
                             <div className="mt-8 flex items-center justify-center gap-4">
                                 {currentPage > 1 && (
                                     <Link
-                                        href={`/auctions?page=${currentPage - 1}`}
+                                        href={buildPageUrl(sp, currentPage - 1)}
                                         className="border border-ink px-4 py-2 font-mono text-xs uppercase tracking-wide hover:bg-ink hover:text-paper"
                                     >
                                         → السابق
@@ -109,7 +145,7 @@ export default async function AuctionsPage({
                                 </span>
                                 {currentPage < totalPages && (
                                     <Link
-                                        href={`/auctions?page=${currentPage + 1}`}
+                                        href={buildPageUrl(sp, currentPage + 1)}
                                         className="border border-ink px-4 py-2 font-mono text-xs uppercase tracking-wide hover:bg-ink hover:text-paper"
                                     >
                                         التالي ←

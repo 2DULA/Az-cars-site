@@ -2,24 +2,49 @@
 
 import Link from "next/link";
 import type { VehicleSummary } from "@/lib/types";
-import { formatSAR, formatMileage } from "@/lib/format";
+import { formatPrice, formatMileage } from "@/lib/format";
 import { proxiedImage } from "@/lib/proxiedImage";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { useCurrency } from "@/lib/currency/CurrencyContext";
 import { CheckCircle2, AlertTriangle, Gauge, ShieldAlert } from "lucide-react";
 
+const STRINGS = {
+  ar: {
+    verified: "موثّقة",
+    belowMarket: "أقل من سعر السوق",
+    hasAccident: "بها حادث",
+    price: "السعر",
+    noPhoto: "لا توجد صورة",
+  },
+  en: {
+    verified: "Verified",
+    belowMarket: "Below market",
+    hasAccident: "Accident",
+    price: "Price",
+    noPhoto: "No photo",
+  },
+};
+
 export default function CarCard({ car }: { car: VehicleSummary }) {
-  const badge = car.analysis?.is_undervalued ? "أقل من سعر السوق" : null;
+  const { lang } = useLanguage();
+  const { currency } = useCurrency();
+  const s = STRINGS[lang];
+  const badge = car.analysis?.is_undervalued ? s.belowMarket : null;
 
   return (
     <Link
       href={`/cars/${car.id}`}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-steel hover:shadow-md"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-paper shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-steel hover:shadow-md"
     >
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-paper">
         {car.thumb?.url ? (
           <>
-            { }
             <img
-              src={proxiedImage(car.thumb.url)}
+              src={
+                car.thumb.url.startsWith("/uploads/")
+                  ? car.thumb.url
+                  : proxiedImage(car.thumb.url)
+              }
               alt={`${car.brand_name} ${car.model_name}`}
               referrerPolicy="no-referrer"
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -29,12 +54,12 @@ export default function CarCard({ car }: { car: VehicleSummary }) {
               }}
             />
             <div className="hidden h-full w-full items-center justify-center font-mono text-sm text-ink/40">
-              لا توجد صورة
+              {s.noPhoto}
             </div>
           </>
         ) : (
           <div className="flex h-full w-full items-center justify-center font-mono text-sm text-ink/40">
-            لا توجد صورة
+            {s.noPhoto}
           </div>
         )}
 
@@ -42,7 +67,7 @@ export default function CarCard({ car }: { car: VehicleSummary }) {
           {car.is_verified && (
             <span className="flex items-center gap-1 rounded-full bg-green-500/90 px-2.5 py-1 text-xs font-bold text-white shadow-sm backdrop-blur-md">
               <CheckCircle2 size={14} />
-              موثّقة
+              {s.verified}
             </span>
           )}
           {badge && (
@@ -56,7 +81,7 @@ export default function CarCard({ car }: { car: VehicleSummary }) {
         {car.has_accident && (
           <span className="absolute end-3 top-3 flex items-center gap-1 rounded-full bg-red-500/90 px-2.5 py-1 text-xs font-bold text-white shadow-sm backdrop-blur-md">
             <ShieldAlert size={14} />
-            بها حادث
+            {s.hasAccident}
           </span>
         )}
       </div>
@@ -66,7 +91,7 @@ export default function CarCard({ car }: { car: VehicleSummary }) {
           <p className="font-mono text-xs uppercase tracking-wide text-steel">
             {car.source_code}
           </p>
-          <span className="shrink-0 rounded-md bg-paper px-2 py-1 font-mono text-xs font-semibold text-steel">
+          <span className="shrink-0 rounded-md bg-line/30 px-2 py-1 font-mono text-xs font-semibold text-steel">
             {car.year}
           </span>
         </div>
@@ -84,9 +109,9 @@ export default function CarCard({ car }: { car: VehicleSummary }) {
         </div>
 
         <div className="mt-auto flex items-end justify-between">
-          <p className="text-sm font-medium text-ink/60">السعر</p>
+          <p className="text-sm font-medium text-ink/60">{s.price}</p>
           <span className="font-display text-2xl font-bold text-ink" suppressHydrationWarning>
-            {formatSAR(car.price_usd)}
+            {formatPrice(car.price_usd, currency, lang)}
           </span>
         </div>
       </div>

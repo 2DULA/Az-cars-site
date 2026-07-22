@@ -1,9 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowUpLeft, Phone, Mail, MapPin } from "lucide-react";
+import { ArrowUpLeft, ArrowUpRight, Phone, Mail, MapPin } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { dictionary } from "@/lib/i18n/dictionary";
 
 export default function ContactPage() {
+    const { lang } = useLanguage();
+    const t = dictionary[lang].contactPage;
+    const isRtl = lang === "ar";
+    const Arrow = isRtl ? ArrowUpLeft : ArrowUpRight;
+
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [message, setMessage] = useState("");
@@ -11,23 +18,21 @@ export default function ContactPage() {
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        // TODO: wire this up to an email service or backend endpoint
         console.log({ name, email, message });
         setSubmitted(true);
     }
 
     return (
-        <main className="mx-auto max-w-6xl px-4 py-16 lg:px-8">
+        <main className="mx-auto max-w-6xl px-4 py-16 lg:px-8" dir={isRtl ? "rtl" : "ltr"}>
             <div className="grid gap-16 lg:grid-cols-2 lg:gap-12 items-start">
 
-                {/* Right Column (Arabic RTL): Contact Information */}
                 <div className="space-y-8">
                     <div>
                         <h1 className="font-display text-3xl font-bold lg:text-4xl">
-                            هل لديك أسئلة؟ تواصل معنا!
+                            {t.title}
                         </h1>
                         <p className="mt-4 text-ink/70">
-                            نحن هنا لمساعدتك في العثور على سيارة أحلامك أو الإجابة على أي استفسارات حول المزادات وخدمات استيراد السيارات.
+                            {t.subtitle}
                         </p>
                     </div>
 
@@ -37,8 +42,8 @@ export default function ContactPage() {
                                 <Phone size={20} />
                             </div>
                             <div>
-                                <h3 className="font-semibold">رقم الهاتف</h3>
-                                <p className="font-mono text-sm text-ink/70 dir-ltr text-right">+966 50 000 0000</p>
+                                <h3 className="font-semibold">{t.phoneLabel}</h3>
+                                <p className="font-mono text-sm text-ink/70" dir="ltr">+966 50 000 0000</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
@@ -46,7 +51,7 @@ export default function ContactPage() {
                                 <Mail size={20} />
                             </div>
                             <div>
-                                <h3 className="font-semibold">البريد الإلكتروني</h3>
+                                <h3 className="font-semibold">{t.emailLabel}</h3>
                                 <p className="font-mono text-sm text-ink/70">info@alez-cars.com</p>
                             </div>
                         </div>
@@ -55,43 +60,42 @@ export default function ContactPage() {
                                 <MapPin size={20} />
                             </div>
                             <div>
-                                <h3 className="font-semibold">العنوان</h3>
-                                <p className="text-sm text-ink/70">الرياض، المملكة العربية السعودية</p>
+                                <h3 className="font-semibold">{t.addressLabel}</h3>
+                                <p className="text-sm text-ink/70">{t.addressValue}</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Left Column: Form Wrapper */}
-                <div className="rounded-2xl border border-line bg-white p-6 shadow-sm sm:p-8">
+                <div className="rounded-2xl border border-line bg-paper p-6 shadow-sm sm:p-8">
                     {submitted ? (
                         <div className="py-12 text-center">
                             <p className="font-display text-xl font-semibold text-steel">
-                                تم إرسال رسالتك بنجاح
+                                {t.successTitle}
                             </p>
                             <p className="mt-2 text-sm text-ink/60">
-                                سنتواصل معك في أقرب وقت ممكن.
+                                {t.successBody}
                             </p>
                         </div>
                     ) : (
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div>
                                 <label className="mb-1.5 block text-sm font-semibold">
-                                    اسمك
+                                    {t.name}
                                 </label>
                                 <input
                                     type="text"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    placeholder="الاسم الكامل"
+                                    placeholder={t.namePlaceholder}
                                     required
-                                    className="w-full rounded-lg border border-line bg-paper px-4 py-3 text-sm outline-none placeholder:text-ink/40 focus:border-steel focus:bg-white"
+                                    className="w-full rounded-lg border border-line bg-transparent text-ink px-4 py-3 text-sm outline-none placeholder:text-ink/40 focus:border-steel"
                                 />
                             </div>
 
                             <div>
                                 <label className="mb-1.5 block text-sm font-semibold">
-                                    البريد الإلكتروني
+                                    {t.emailLabel}
                                 </label>
                                 <input
                                     type="email"
@@ -99,30 +103,30 @@ export default function ContactPage() {
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="example@domain.com"
                                     required
-                                    className="w-full rounded-lg border border-line bg-paper px-4 py-3 text-sm outline-none placeholder:text-ink/40 focus:border-steel focus:bg-white"
+                                    className="w-full rounded-lg border border-line bg-transparent text-ink px-4 py-3 text-sm outline-none placeholder:text-ink/40 focus:border-steel"
                                 />
                             </div>
 
                             <div>
                                 <label className="mb-1.5 block text-sm font-semibold">
-                                    الرسالة
+                                    {t.messageLabel}
                                 </label>
                                 <textarea
                                     value={message}
                                     onChange={(e) => setMessage(e.target.value)}
-                                    placeholder="اكتب رسالتك هنا..."
+                                    placeholder={t.messagePlaceholder}
                                     rows={5}
                                     required
-                                    className="w-full rounded-lg border border-line bg-paper px-4 py-3 text-sm outline-none placeholder:text-ink/40 focus:border-steel focus:bg-white resize-none"
+                                    className="w-full rounded-lg border border-line bg-transparent text-ink px-4 py-3 text-sm outline-none placeholder:text-ink/40 focus:border-steel resize-none"
                                 />
                             </div>
 
                             <button
                                 type="submit"
-                                className="flex w-full items-center justify-center gap-2 rounded-lg bg-steel py-3.5 font-mono text-sm font-bold text-white transition-all hover:bg-ink hover:shadow-md"
+                                className="flex w-full items-center justify-center gap-2 rounded-lg bg-steel py-3.5 font-mono text-sm font-bold text-paper transition-all hover:bg-ink hover:shadow-md"
                             >
-                                إرسال الرسالة
-                                <ArrowUpLeft size={18} />
+                                {t.submit}
+                                <Arrow size={18} />
                             </button>
                         </form>
                     )}

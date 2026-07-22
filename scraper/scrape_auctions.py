@@ -65,10 +65,11 @@ def parse_card(card):
     }
 
 
-def scrape_auctions(max_pages=50):
-    results = []
-    seen_urls = set()
+def scrape_auctions(max_pages=60):
+
+    all_items = []
     page = 1
+    consecutive_empty = 0
 
     while page <= max_pages:
         url = f"{BASE_URL}/cars/?car_type=auction&page={page}"
@@ -82,28 +83,31 @@ def scrape_auctions(max_pages=50):
         cards = soup.select("a.gl-list-card")
 
         if not cards:
-            break
+            consecutive_empty += 1
+            print(f"Page {page}: no cards found")
+            if consecutive_empty >= 2:
+                print("Two empty pages in a row, stopping")
+                break
+        else:
+            consecutive_empty = 0
+            parsed = [parse_card(c) for c in cards]
+            all_items.extend(parsed)
+            print(
+                f"Page {page}: {len(parsed)} listings (raw, incl. possible duplicates)")
 
-        parsed = [parse_card(c) for c in cards]
-        new_items = [p for p in parsed if p["url"] not in seen_urls]
-
-        if not new_items:
-            print(f"Page {page}: all duplicates, stopping")
-            break
-
-        for item in new_items:
-            seen_urls.add(item["url"])
-        results.extend(new_items)
-
-        print(f"Page {page}: {len(new_items)} new listings")
         page += 1
         time.sleep(5)
 
-    return results
+    # Dedupe by URL at the end, keeping the last-seen version of each
+    deduped = {}
+    for item in all_items:
+        deduped[item["url"]] = item
+
+    return list(deduped.values())
 
 
 if __name__ == "__main__":
     data = scrape_auctions()
     with open("auctions.json", "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-    print(f"Saved {len(data)} unique listings")
+    print(f"Scraped {len(data)} unique listings total")

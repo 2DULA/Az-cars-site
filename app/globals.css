@@ -9,6 +9,15 @@
   --line: #ddd6e8;
 }
 
+/* Dark Mode Variables */
+:root.dark {
+  --ink: #f7f5fa;
+  --steel: #a688d1;
+  --paper: #1a1330;
+  --amber: #6b4fa0;
+  --line: #3a2d52;
+}
+
 @theme inline {
   --color-ink: var(--ink);
   --color-steel: var(--steel);

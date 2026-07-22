@@ -1,6 +1,10 @@
 import Link from "next/link";
+import fs from "fs/promises";
+import path from "path";
+import { cookies } from "next/headers";
 import { fetchVehicles, CarapisError } from "@/lib/carapis";
 import type { VehicleFilters } from "@/lib/types";
+import { dictionary } from "@/lib/i18n/dictionary";
 import CarCard from "@/app/components/CarCard";
 import Filters from "@/app/components/Filters";
 
@@ -38,6 +42,65 @@ function parseFilters(sp: SearchParams): VehicleFilters {
   };
 }
 
+async function getManualCars(): Promise<any[]> {
+  try {
+    const raw = await fs.readFile(
+      path.join(process.cwd(), "data", "manual-cars.json"),
+      "utf-8"
+    );
+    const cars = JSON.parse(raw);
+    return cars.map((c: any) => ({
+      id: c.id,
+      brand_name: c.make,
+      model_name: c.model,
+      trim: null,
+      year: c.year,
+      price_usd: c.price,
+      mileage: c.mileage,
+      source_code: "متوفرة محلياً",
+      is_verified: false,
+      has_accident: false,
+      analysis: null,
+      thumb: c.images?.[0] ? { url: c.images[0] } : null,
+      _manual: c,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+function matchesFilters(car: any, filters: VehicleFilters): boolean {
+  if (
+    filters.search &&
+    !`${car.make} ${car.model}`
+      .toLowerCase()
+      .includes(filters.search.toLowerCase())
+  )
+    return false;
+  if (filters.brand && car.make?.toLowerCase() !== filters.brand.toLowerCase())
+    return false;
+  if (filters.model && car.model?.toLowerCase() !== filters.model.toLowerCase())
+    return false;
+  if (filters.min_price && car.price < filters.min_price) return false;
+  if (filters.max_price && car.price > filters.max_price) return false;
+  if (filters.min_year && car.year < filters.min_year) return false;
+  if (filters.max_year && car.year > filters.max_year) return false;
+  if (filters.min_mileage && car.mileage < filters.min_mileage) return false;
+  if (filters.max_mileage && car.mileage > filters.max_mileage) return false;
+  if (
+    filters.fuel_type &&
+    car.specs?.fuel?.toLowerCase() !== filters.fuel_type.toLowerCase()
+  )
+    return false;
+  if (
+    filters.transmission &&
+    car.specs?.transmission?.toLowerCase() !==
+    filters.transmission.toLowerCase()
+  )
+    return false;
+  return true;
+}
+
 export default async function CarsPage({
   searchParams,
 }: {
@@ -45,6 +108,13 @@ export default async function CarsPage({
 }) {
   const sp = await searchParams;
   const filters = parseFilters(sp);
+
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get("lang")?.value === "en" ? "en" : "ar") as
+    | "ar"
+    | "en";
+  const t = dictionary[lang].carsPage;
+  const isRtl = lang === "ar";
 
   let data;
   let errorMessage: string | null = null;
@@ -55,23 +125,49 @@ export default async function CarsPage({
     errorMessage =
       err instanceof CarapisError
         ? err.message
-        : "حدث خطأ أثناء تحميل السيارات.";
+        : isRtl
+          ? "حدث خطأ أثناء تحميل السيارات."
+          : "Something went wrong loading listings.";
+  }
+
+  
+  const manualCarsRaw = await getManualCars();
+  const manualCars = manualCarsRaw.filter((c) => matchesFilters(c, filters));
+
+  const showManualCars = filters.page === 1 || !filters.page;
+
+  if (data && showManualCars && manualCars.length > 0) {
+    data = {
+      ...data,
+     
+      results: [...(manualCars as any), ...data.results],
+      count: data.count + manualCars.length,
+    };
+  } else if (!data && !errorMessage && manualCars.length > 0) {
+    
+    data = {
+      results: manualCars as any,
+      count: manualCars.length,
+      page: 1,
+      pages: 1,
+      has_previous: false,
+      has_next: false,
+    } as any;
+    errorMessage = null;
   }
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
+    <main className="mx-auto max-w-7xl px-4 py-10 lg:px-8" dir={isRtl ? "rtl" : "ltr"}>
       <div className="mb-8 flex items-end justify-between border-b border-line pb-6">
         <div>
           <p className="font-mono text-xs uppercase tracking-wide text-steel">
-            المخزون
+            {t.inventoryLabel}
           </p>
-          <h1 className="font-display text-3xl font-bold">
-            السيارات المتوفرة للتصدير
-          </h1>
+          <h1 className="font-display text-3xl font-bold">{t.title}</h1>
         </div>
         {data && (
           <p className="font-mono text-sm text-ink/60">
-            {data.count} سيارة متوفرة
+            {data.count} {t.countSuffix}
           </p>
         )}
       </div>
@@ -83,11 +179,12 @@ export default async function CarsPage({
           {errorMessage && (
             <div className="border border-ink bg-white p-6">
               <p className="font-mono text-sm text-ink">
-                تعذّر تحميل السيارات: {errorMessage}
+                {t.errorPrefix} {errorMessage}
               </p>
               <p className="mt-2 text-base text-ink/60">
-                إذا كنت تشغّل الموقع محليًا، تأكد من ضبط{" "}
-                <code className="font-mono">CARAPIS_API_KEY</code> في ملف{" "}
+                {t.errorHint}{" "}
+                <code className="font-mono">CARAPIS_API_KEY</code>{" "}
+                {t.errorHintEnd}{" "}
                 <code className="font-mono">.env.local</code>.
               </p>
             </div>
@@ -96,11 +193,9 @@ export default async function CarsPage({
           {data && data.results.length === 0 && (
             <div className="border border-line bg-white p-10 text-center">
               <p className="font-display text-lg font-semibold">
-                لا توجد سيارات مطابقة لهذه الفلاتر
+                {t.noResultsTitle}
               </p>
-              <p className="mt-1 text-sm text-ink/60">
-                جرّب توسيع نطاق السعر أو إزالة أحد الفلاتر.
-              </p>
+              <p className="mt-1 text-sm text-ink/60">{t.noResultsBody}</p>
             </div>
           )}
 
@@ -114,13 +209,13 @@ export default async function CarsPage({
 
               <div className="mt-8 flex items-center justify-center gap-4">
                 {data.has_previous && (
-                  <PageLink sp={sp} page={data.page - 1} label="→ السابق" />
+                  <PageLink sp={sp} page={data.page - 1} label={t.previous} />
                 )}
                 <span className="font-mono text-sm text-ink/60">
-                  صفحة {data.page} من {data.pages}
+                  {t.pageLabel} {data.page} {t.ofLabel} {data.pages}
                 </span>
                 {data.has_next && (
-                  <PageLink sp={sp} page={data.page + 1} label="التالي ←" />
+                  <PageLink sp={sp} page={data.page + 1} label={t.next} />
                 )}
               </div>
             </>
