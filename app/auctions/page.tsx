@@ -4,6 +4,7 @@ import AuctionCard from "@/app/components/AuctionCard";
 import AuctionFilters from "@/app/components/AuctionFilters";
 import { createClient } from "@/lib/supabase/server";
 import { dictionary } from "@/lib/i18n/dictionary";
+import { translateSearchTerm } from "@/lib/carBrandTranslations";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -91,7 +92,7 @@ export default async function AuctionsPage({
         .eq("status", "active");
 
     if (sp.search) {
-        const q = sp.search.trim();
+        const q = translateSearchTerm(sp.search.trim());
         query = query.or(`model.ilike.%${q}%,model_ko.ilike.%${q}%,brand.ilike.%${q}%`);
     }
     if (sp.brand) query = query.eq("brand", sp.brand);

@@ -228,18 +228,19 @@ export default function Home() {
 
   const handleSearchSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    if (activeTab === "auction") {
-      router.push("/auctions");
-      return;
-    }
     const params = new URLSearchParams();
     if (selectedBrand) params.set("brand", selectedBrand.id);
-    if (selectedModel) params.set("model", selectedModel.id);
     if (selectedYear) {
       params.set("min_year", selectedYear);
       params.set("max_year", selectedYear);
     }
     const queryString = params.toString();
+
+    if (activeTab === "auction") {
+      router.push(`/auctions${queryString ? `?${queryString}` : ""}`);
+      return;
+    }
+    if (selectedModel) params.set("model", selectedModel.id);
     router.push(`/cars${queryString ? `?${queryString}` : ""}`);
   };
 
