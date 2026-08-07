@@ -203,7 +203,7 @@ export default async function CarsPage({
 
         <section className="flex-1">
           {errorMessage && (
-            <div className="border border-ink bg-white p-6">
+            <div className="border border-ink bg-paper p-6">
               <p className="font-mono text-sm text-ink">
                 {t.errorPrefix} {errorMessage}
               </p>
@@ -217,7 +217,7 @@ export default async function CarsPage({
           )}
 
           {data && data.results.length === 0 && (
-            <div className="border border-line bg-white p-10 text-center">
+            <div className="border border-line bg-paper p-10 text-center">
               <p className="font-display text-lg font-semibold">
                 {t.noResultsTitle}
               </p>
