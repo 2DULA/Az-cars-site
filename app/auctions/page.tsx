@@ -95,7 +95,7 @@ export default async function AuctionsPage({
         const q = translateSearchTerm(sp.search.trim());
         query = query.or(`model.ilike.%${q}%,model_ko.ilike.%${q}%,brand.ilike.%${q}%`);
     }
-    if (sp.brand) query = query.eq("brand", sp.brand);
+    if (sp.brand) query = query.ilike("brand", sp.brand);
     if (sp.fuel) query = query.eq("fuel", sp.fuel);
     if (sp.transmission) query = query.eq("transmission", sp.transmission);
     if (sp.min_year) query = query.gte("year", Number(sp.min_year));
