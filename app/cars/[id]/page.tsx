@@ -340,7 +340,7 @@ function ValuationCard({
   analysis: ValuationAnalysis;
   currency: CurrencyCode;
   lang: Lang;
-  t: typeof dictionary["ar"]["carDetailPage"];
+  t: typeof dictionary["ar"]["carDetailPage"] | typeof dictionary["en"]["carDetailPage"];
 }) {
   return (
     <div className="border-b border-line pb-4 mb-4">
@@ -378,7 +378,7 @@ function buildWhatsAppLink({
   year: number;
   price: string;
   listingId?: string;
-  t: typeof dictionary["ar"]["carDetailPage"];
+  t: typeof dictionary["ar"]["carDetailPage"] | typeof dictionary["en"]["carDetailPage"];
 }): string {
   const lines = [
     t.whatsappQuoteTitle,
