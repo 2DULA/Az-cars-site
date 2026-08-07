@@ -205,7 +205,7 @@ export default function CarDetailsView({
 
     return (
         <main dir={isRtl ? "rtl" : "ltr"} className="bg-paper">
-            <div className="relative w-full aspect-[21/9] bg-ink overflow-hidden">
+            <div className="relative w-full aspect-[16/9] md:aspect-[21/9] bg-ink overflow-hidden">
                 {activeImage ? (
                     <img
                         src={`/api/image-proxy?url=${encodeURIComponent(activeImage)}`}
@@ -217,13 +217,7 @@ export default function CarDetailsView({
                         {t.noImages}
                     </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                <div className={`absolute bottom-0 ${isRtl ? "right-0" : "left-0"} p-6 sm:p-10 text-paper`}>
-                    <p className="text-paper/70 text-sm">{car.brand || "—"}</p>
-                    <h1 className="font-display text-4xl sm:text-5xl font-bold mt-1 text-white">
-                        {car.model_display || car.model || "—"}
-                    </h1>
-                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
             </div>
 
             {images.length > 0 && (
@@ -250,6 +244,13 @@ export default function CarDetailsView({
                     </div>
                 </div>
             )}
+
+            <div className="mx-auto max-w-6xl px-4 lg:px-8 pt-6">
+                <p className="text-steel text-sm mb-1">{car.brand || "—"}</p>
+                <h1 className="font-display text-3xl font-bold text-ink">
+                    {car.model_display || car.model || "—"}
+                </h1>
+            </div>
 
             <div className="mx-auto max-w-6xl px-4 lg:px-8 py-10">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

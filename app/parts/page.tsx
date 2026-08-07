@@ -82,7 +82,7 @@ export default function PartsRequestPage() {
 
             <div>
                 <label className="block text-sm font-semibold mb-2">{t.vin}</label>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                     <input
                         type="text"
                         value={vin}
@@ -93,24 +93,24 @@ export default function PartsRequestPage() {
                     <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="bg-transparent text-ink border border-line px-4 rounded-xl flex items-center gap-2 hover:opacity-70 transition-opacity"
+                        className="bg-transparent text-ink border border-line px-4 rounded-xl flex items-center justify-center gap-2 hover:opacity-70 transition-opacity shrink-0"
                     >
-                                <Camera size={18} /> {t.photo}
-                            </button>
-                            <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
-                        </div>
-                        {imagePreview && (
-                            <div className="mt-3 relative inline-block">
-                                <img src={imagePreview} className="w-20 h-20 object-cover rounded border border-line" />
-                                <button
-                                    type="button"
-                                    onClick={() => setImagePreview(null)}
-                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5"
-                                >
-                                    <X size={14} />
-                                </button>
-                            </div>
-                        )}
+                        <Camera size={18} /> {t.photo}
+                    </button>
+                    <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
+                </div>
+                {imagePreview && (
+                    <div className="mt-3 relative inline-block">
+                        <img src={imagePreview} alt={t.photo} className="w-20 h-20 object-cover rounded border border-line" />
+                        <button
+                            type="button"
+                            onClick={() => setImagePreview(null)}
+                            className="absolute -top-2 end-0 translate-x-1/2 bg-red-500 text-white rounded-full p-0.5"
+                        >
+                            <X size={14} />
+                        </button>
+                    </div>
+                )}
                     </div>
 
                     <div>

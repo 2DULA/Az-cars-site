@@ -4,8 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 export default function CarGallery({
   title,
-  badge,
-  subtitle,
   mainPhoto,
   thumbs,
 }: {
@@ -103,15 +101,6 @@ export default function CarGallery({
             لا توجد صور متوفرة
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
-
-        <div className="absolute bottom-0 right-0 p-6 sm:p-10 text-white pointer-events-none">
-          {badge && <p className="text-white/70 text-sm">{badge}</p>}
-          <h1 className="font-display text-4xl sm:text-5xl font-bold mt-1">
-            {title}
-          </h1>
-          {subtitle && <p className="text-white/60 text-sm mt-2">{subtitle}</p>}
-        </div>
 
         {images.length > 1 && (
           <>

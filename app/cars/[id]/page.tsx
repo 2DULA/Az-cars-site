@@ -288,7 +288,13 @@ function MainLayout({
         thumbs={thumbs}
       />
 
-      <div className="mx-auto max-w-6xl px-4 lg:px-8 py-10">
+      <div className="mx-auto max-w-6xl px-4 lg:px-8 pt-6">
+        {badge && <p className="text-steel text-sm mb-1">{badge}</p>}
+        <h1 className="font-display text-3xl font-bold text-ink">{title}</h1>
+        {subtitle && <p className="text-ink/60 text-sm mt-1">{subtitle}</p>}
+      </div>
+
+      <div className="mx-auto max-w-6xl px-4 lg:px-8 py-6">
         <Link
           href="/cars"
           className="mb-6 inline-block font-mono text-xs uppercase tracking-wide text-steel hover:underline"
