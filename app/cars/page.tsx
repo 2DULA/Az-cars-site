@@ -3,7 +3,7 @@ import fs from "fs/promises";
 import path from "path";
 import { cookies } from "next/headers";
 import { fetchVehicles, CarapisError } from "@/lib/carapis";
-import type { VehicleFilters } from "@/lib/types";
+import type { VehicleFilters, VehicleSummary } from "@/lib/types";
 import { dictionary } from "@/lib/i18n/dictionary";
 import CarCard from "@/app/components/CarCard";
 import Filters from "@/app/components/Filters";
@@ -228,7 +228,7 @@ export default async function CarsPage({
           {data && data.results.length > 0 && (
             <>
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {data.results.map((car) => (
+                {data.results.map((car: VehicleSummary) => (
                   <CarCard key={car.id} car={car} />
                 ))}
               </div>
