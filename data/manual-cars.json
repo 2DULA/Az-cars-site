@@ -1,1 +1,22 @@
-[]
+[
+  {
+    "id": "manual-1786120436934",
+    "source": "manual",
+    "make": "Test number 2",
+    "model": "ModelforTesting",
+    "year": 3247,
+    "price": 89,
+    "mileage": 4657,
+    "description": "cat car",
+    "images": [
+      "/uploads/cars/manual-1786120436934/1.png",
+      "/uploads/cars/manual-1786120436934/2.png",
+      "/uploads/cars/manual-1786120436934/3.png"
+    ],
+    "specs": {
+      "engine": "TestEngine",
+      "transmission": "hello",
+      "fuel": "gas"
+    }
+  }
+]

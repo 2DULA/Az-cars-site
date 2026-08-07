@@ -13,8 +13,9 @@
     "@supabase/supabase-js": "^2.110.2",
     "axios": "^1.18.1",
     "cheerio": "^1.2.0",
+    "framer-motion": "^13.0.0",
     "lucide-react": "^1.24.0",
-    "next": "16.2.10",
+    "next": "^16.3.0",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },

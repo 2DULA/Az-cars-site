@@ -7,8 +7,14 @@ import type { VehicleFilters } from "@/lib/types";
 import { dictionary } from "@/lib/i18n/dictionary";
 import CarCard from "@/app/components/CarCard";
 import Filters from "@/app/components/Filters";
+import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
+export const metadata: Metadata = {
+  title: "السيارات المتوفرة للتصدير | معرض العز",
+  description:
+    "تصفح قوائم السيارات الكورية الموثقة المتوفرة للتصدير — سجل فحص كامل، تحليل السعر، وشحن مباشر.",
+};
 
 type SearchParams = { [key: string]: string | undefined };
 
@@ -108,6 +114,7 @@ export default async function CarsPage({
 }) {
   const sp = await searchParams;
   const filters = parseFilters(sp);
+  const activeTab = sp.tab === "manual" ? "manual" : "carapis";
 
   const cookieStore = await cookies();
   const lang = (cookieStore.get("lang")?.value === "en" ? "en" : "ar") as
@@ -119,41 +126,37 @@ export default async function CarsPage({
   let data;
   let errorMessage: string | null = null;
 
-  try {
-    data = await fetchVehicles(filters);
-  } catch (err) {
-    errorMessage =
-      err instanceof CarapisError
-        ? err.message
-        : isRtl
-          ? "حدث خطأ أثناء تحميل السيارات."
-          : "Something went wrong loading listings.";
-  }
+  if (activeTab === "carapis") {
+    try {
+      data = await fetchVehicles(filters);
+    } catch (err) {
+      errorMessage =
+        err instanceof CarapisError
+          ? err.message
+          : isRtl
+            ? "حدث خطأ أثناء تحميل السيارات."
+            : "Something went wrong loading listings.";
+    }
+  } else {
+    // Manual tab — paginate locally
+    const manualCarsRaw = await getManualCars();
+    const filtered = manualCarsRaw.filter((c) => matchesFilters(c, filters));
+    const page = filters.page || 1;
+    const pageSize = 12;
+    const total = filtered.length;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const start = (page - 1) * pageSize;
+    const paged = filtered.slice(start, start + pageSize);
 
-  
-  const manualCarsRaw = await getManualCars();
-  const manualCars = manualCarsRaw.filter((c) => matchesFilters(c, filters));
-
-  const showManualCars = filters.page === 1 || !filters.page;
-
-  if (data && showManualCars && manualCars.length > 0) {
     data = {
-      ...data,
-     
-      results: [...(manualCars as any), ...data.results],
-      count: data.count + manualCars.length,
-    };
-  } else if (!data && !errorMessage && manualCars.length > 0) {
-    
-    data = {
-      results: manualCars as any,
-      count: manualCars.length,
-      page: 1,
-      pages: 1,
-      has_previous: false,
-      has_next: false,
+      results: paged as any,
+      count: total,
+      page,
+      pages: totalPages,
+      has_previous: page > 1,
+      has_next: page < totalPages,
+      page_size: pageSize,
     } as any;
-    errorMessage = null;
   }
 
   return (
@@ -170,6 +173,29 @@ export default async function CarsPage({
             {data.count} {t.countSuffix}
           </p>
         )}
+      </div>
+
+      <div className="mb-6 flex items-center gap-2">
+        <a
+          href={buildTabUrl(sp, "carapis")}
+          className={`rounded-full px-5 py-2 font-mono text-sm font-bold uppercase tracking-wider transition-colors ${
+            activeTab === "carapis"
+              ? "bg-steel text-white"
+              : "border border-ink/10 text-ink/60 hover:text-steel"
+          }`}
+        >
+          {t.tabCarapis}
+        </a>
+        <a
+          href={buildTabUrl(sp, "manual")}
+          className={`rounded-full px-5 py-2 font-mono text-sm font-bold uppercase tracking-wider transition-colors ${
+            activeTab === "manual"
+              ? "bg-steel text-white"
+              : "border border-ink/10 text-ink/60 hover:text-steel"
+          }`}
+        >
+          {t.tabManual}
+        </a>
       </div>
 
       <div className="flex flex-col gap-6 lg:flex-row">
@@ -226,6 +252,18 @@ export default async function CarsPage({
   );
 }
 
+function buildTabUrl(sp: SearchParams, tab: string): string {
+  const params = new URLSearchParams(
+    Object.entries(sp).filter(([, v]) => v !== undefined) as [
+      string,
+      string
+    ][]
+  );
+  params.set("tab", tab);
+  params.delete("page");
+  return `/cars?${params.toString()}`;
+}
+
 function PageLink({
   sp,
   page,
@@ -242,6 +280,7 @@ function PageLink({
     ][]
   );
   params.set("page", String(page));
+  if (sp.tab) params.set("tab", sp.tab);
   return (
     <Link
       href={`/cars?${params.toString()}`}

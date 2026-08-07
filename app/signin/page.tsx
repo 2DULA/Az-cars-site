@@ -54,7 +54,7 @@ export default function SignInPage() {
                         {t.signInTitle}
                     </h1>
                     <p className="mt-2 text-sm text-ink/60">
-                        {isRtl ? "مرحباً بك مجدداً في معرض العز" : "Welcome back to Al-Ezz Exhibition"}
+                        {t.signInSubtitle}
                     </p>
                 </div>
 

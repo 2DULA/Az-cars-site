@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 const ADMIN_EMAILS = [
     "alimusa7155@gmail.com",
     "httpsdula@gmail.com",
+    "httpdula@gmail.com"
     // add more as needed
 ];
 

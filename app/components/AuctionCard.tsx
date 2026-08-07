@@ -2,25 +2,28 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, krwToUsd, formatMileage } from "@/lib/format";
 import { useCurrency } from "@/lib/currency/CurrencyContext";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { Gauge, Fuel, Clock, Gavel } from "lucide-react";
+import type { AuctionListing } from "@/app/auctions/page";
 
-interface AuctionListing {
-    url: string;
-    brand: string | null;
-    model: string | null;
-    trim: string | null;
-    fuel: string | null;
-    price_krw: string | null;
-    mileage: string | null;
-    transmission: string | null;
-    engine: string | null;
-    image: string | null;
-    auction_date: string | null;
-}
+const STRINGS = {
+    ar: {
+        noImage: "لا توجد صورة",
+        auction: "مزاد",
+        ended: "انتهى",
+        price: "السعر",
+    },
+    en: {
+        noImage: "No image",
+        auction: "Auction",
+        ended: "Ended",
+        price: "Price",
+    },
+};
 
-function useCountdown(target: string | null) {
+function useCountdown(target: string | null, endedLabel: string) {
     const [remaining, setRemaining] = useState(0);
     useEffect(() => {
         if (!target) return;
@@ -34,7 +37,7 @@ function useCountdown(target: string | null) {
     const h = String(Math.floor(s / 3600)).padStart(2, "0");
     const m = String(Math.floor((s % 3600) / 60)).padStart(2, "0");
     const sec = String(s % 60).padStart(2, "0");
-    return remaining > 0 ? `${h}:${m}:${sec}` : "انتهى";
+    return remaining > 0 ? `${h}:${m}:${sec}` : endedLabel;
 }
 
 export default function AuctionCard({
@@ -45,10 +48,14 @@ export default function AuctionCard({
     url: string;
 }) {
     const { currency } = useCurrency();
-    const usdEquivalent = car.price_krw
-        ? Math.round(Number(car.price_krw) * 0.00077)
-        : 0;
-    const countdown = useCountdown(car.auction_date);
+    const { lang } = useLanguage();
+    const t = STRINGS[lang];
+    // start_amt is stored as raw "man-won" units (x10,000 KRW) straight
+    // from the auction API -- multiply back to real KRW, then convert
+    // to USD before handing off to formatPrice.
+    const usdEquivalent = car.start_amt ? krwToUsd(car.start_amt * 10000) : 0;
+    const countdown = useCountdown(car.auction_start_at, t.ended);
+    const mileageDisplay = car.mileage_km !== null ? formatMileage(car.mileage_km, lang) : null;
 
     return (
         <Link
@@ -56,34 +63,34 @@ export default function AuctionCard({
             className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-paper shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-steel hover:shadow-md"
         >
             <div className="relative aspect-[4/3] w-full overflow-hidden bg-paper">
-                {car.image ? (
+                {car.image_url ? (
                     <img
-                        src={`/api/image-proxy?url=${encodeURIComponent(car.image)}`}
+                        src={`/api/image-proxy?url=${encodeURIComponent(car.image_url)}`}
                         alt={`${car.brand} ${car.model}`}
                         referrerPolicy="no-referrer"
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                 ) : (
                     <div className="flex h-full w-full items-center justify-center font-mono text-sm text-ink/40">
-                        لا توجد صورة
+                        {t.noImage}
                     </div>
                 )}
 
                 <div className="absolute start-3 top-3 flex flex-wrap gap-2">
                     <span className="flex items-center gap-1 rounded-full bg-black/80 px-2.5 py-1 text-xs font-bold text-white shadow-sm backdrop-blur-md">
                         <Gavel size={14} />
-                        مزاد
+                        {t.auction}
                     </span>
                 </div>
 
-                {car.auction_date && (
-                   <div
-                   className="absolute bottom-3 start-3 flex items-center gap-1.5 rounded-full bg-black/80 px-3 py-1.5 font-mono text-xs text-white"
-                   suppressHydrationWarning
-               >
-                   <Clock size={12} />
-                   {countdown}
-               </div>
+                {car.auction_start_at && (
+                    <div
+                        className="absolute bottom-3 start-3 flex items-center gap-1.5 rounded-full bg-black/80 px-3 py-1.5 font-mono text-xs text-white"
+                        suppressHydrationWarning
+                    >
+                        <Clock size={12} />
+                        {countdown}
+                    </div>
                 )}
             </div>
 
@@ -100,17 +107,17 @@ export default function AuctionCard({
                 </div>
 
                 <h3 className="font-display text-xl font-bold leading-tight text-ink line-clamp-1">
-                    {car.model}
+                    {car.model_display || car.model}
                 </h3>
-                {car.trim && (
-                    <p className="mt-1 text-sm text-ink/60 line-clamp-1">{car.trim}</p>
+                {car.year && (
+                    <p className="mt-1 text-sm text-ink/60 line-clamp-1">{car.year}</p>
                 )}
 
                 <div className="my-4 flex items-center gap-4 border-y border-line py-3 text-sm text-ink/75">
-                    {car.mileage && (
+                    {mileageDisplay && (
                         <div className="flex items-center gap-1.5">
                             <Gauge size={16} className="text-steel" />
-                            <span className="font-mono">{car.mileage}</span>
+                            <span className="font-mono">{mileageDisplay}</span>
                         </div>
                     )}
                     {car.transmission && (
@@ -122,12 +129,12 @@ export default function AuctionCard({
                 </div>
 
                 <div className="mt-auto flex items-end justify-between">
-                    <p className="text-sm font-medium text-ink/60">السعر</p>
+                    <p className="text-sm font-medium text-ink/60">{t.price}</p>
                     <span
                         className="font-display text-2xl font-bold text-ink"
                         suppressHydrationWarning
                     >
-                        {formatPrice(usdEquivalent, currency)}
+                        {formatPrice(usdEquivalent, currency, lang)}
                     </span>
                 </div>
             </div>

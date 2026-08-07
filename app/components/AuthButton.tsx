@@ -50,9 +50,9 @@ export default function AuthButton() {
                 </span>
                 <button
                     onClick={handleLogout}
-                    className="flex items-center gap-2 rounded-full border border-line px-4 py-2 font-mono text-xs text-ink/70 hover:border-steel hover:text-steel"
+                    className="flex items-center gap-2.5 rounded-full bg-steel px-7 py-2.5 font-display text-sm font-bold text-white shadow-sm transition-all hover:bg-ink hover:text-paper"
                 >
-                    <LogOut size={14} />
+                    <LogOut size={16} />
                     {t.nav.logout}
                 </button>
             </div>

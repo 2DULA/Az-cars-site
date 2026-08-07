@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export type Currency = "SAR" | "USD" | "AED" | "EGP";
 
@@ -17,6 +18,7 @@ function getCookie(name: string): string | null {
 
 export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     const [currency, setCurrencyState] = useState<Currency>("SAR");
+    const router = useRouter();
 
     useEffect(() => {
         const saved = getCookie("currency") as Currency | null;
@@ -28,6 +30,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     function setCurrency(c: Currency) {
         setCurrencyState(c);
         document.cookie = `currency=${c}; path=/; max-age=31536000`;
+        router.refresh();
     }
 
     return (

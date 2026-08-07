@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type Lang = "ar" | "en";
 
@@ -17,6 +18,7 @@ function getCookie(name: string): string | null {
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
     const [lang, setLangState] = useState<Lang>("ar");
+    const router = useRouter();
 
     useEffect(() => {
         const saved = getCookie("lang") as Lang | null;
@@ -28,6 +30,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         document.cookie = `lang=${l}; path=/; max-age=31536000`;
         document.documentElement.lang = l;
         document.documentElement.dir = l === "ar" ? "rtl" : "ltr";
+        router.refresh();
     }
 
     useEffect(() => {
@@ -43,7 +46,5 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useLanguage() {
-    
     return useContext(LanguageContext);
-
 }

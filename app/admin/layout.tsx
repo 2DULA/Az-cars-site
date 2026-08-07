@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getAdminUser } from "@/lib/adminAuth";
+import { createAdminClient } from "@/lib/supabase/admin";
 import Link from "next/link";
 
 export default async function AdminLayout({
@@ -12,6 +13,18 @@ export default async function AdminLayout({
         redirect("/signin");
     }
 
+    let unreadCount = 0;
+    try {
+        const supabase = createAdminClient();
+        const { count } = await supabase
+            .from("contact_messages")
+            .select("*", { count: "exact", head: true })
+            .eq("is_read", false);
+        unreadCount = count ?? 0;
+    } catch {
+        // Table may not exist yet
+    }
+
     return (
         <div className="min-h-screen bg-[var(--paper)]">
             <div className="flex">
@@ -20,6 +33,14 @@ export default async function AdminLayout({
                     <nav className="flex flex-col gap-2 text-sm">
                         <Link href="/admin/cars" className="py-2 hover:text-steel">Cars</Link>
                         <Link href="/admin/cars/new" className="py-2 hover:text-steel">+ Add Car</Link>
+                        <Link href="/admin/contact" className="py-2 hover:text-steel flex items-center gap-2">
+                            Messages
+                            {unreadCount > 0 && (
+                                <span className="rounded-full bg-steel/20 px-2 py-0.5 text-[11px] font-mono font-bold text-steel">
+                                    {unreadCount}
+                                </span>
+                            )}
+                        </Link>
                     </nav>
                 </aside>
                 <main className="flex-1 p-6">{children}</main>

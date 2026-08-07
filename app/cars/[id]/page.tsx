@@ -4,15 +4,18 @@ import path from "path";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { fetchVehicleById, CarapisError } from "@/lib/carapis";
-import { formatPrice, formatMileage, arLabel } from "@/lib/format";
+import { formatPrice, formatMileage, enumLabel } from "@/lib/format";
 import { proxiedImage } from "@/lib/proxiedImage";
 import CarGallery from "@/app/components/CarGallery";
+import { dictionary } from "@/lib/i18n/dictionary";
+import ImportCostCalculator from "@/app/components/ImportCostCalculator";
 
-const WHATSAPP_NUMBER = "9665XXXXXXXX";
+const WHATSAPP_NUMBER = "966502650283";
 
 export const dynamic = "force-dynamic";
 
 type CurrencyCode = "SAR" | "USD" | "AED" | "EGP";
+type Lang = "ar" | "en";
 
 type ValuationAnalysis = {
   price_status: string;
@@ -48,6 +51,11 @@ async function getCurrency(): Promise<CurrencyCode> {
   return "SAR";
 }
 
+async function getLang(): Promise<Lang> {
+  const cookieStore = await cookies();
+  return cookieStore.get("lang")?.value === "en" ? "en" : "ar";
+}
+
 async function getManualCar(id: string) {
   try {
     const raw = await fs.readFile(
@@ -68,11 +76,13 @@ export default async function CarDetailPage({
 }) {
   const { id } = await params;
   const currency = await getCurrency();
+  const lang = await getLang();
+  const t = dictionary[lang].carDetailPage;
 
   if (id.startsWith("manual-")) {
     const car = await getManualCar(id);
     if (!car) notFound();
-    return <ManualCarDetail car={car} currency={currency} />;
+    return <ManualCarDetail car={car} currency={currency} lang={lang} />;
   }
 
   let car;
@@ -87,115 +97,117 @@ export default async function CarDetailPage({
   const mainPhoto =
     photos.find((p) => p.is_main)?.url || photos[0]?.url;
 
+  // Auctions-style spec tiles: label/value pairs, filtered to only show
+  // populated values, rendered as a grid of small cards instead of rows.
+  const specTiles: [string, string | null | undefined][] = [
+    [t.brand, car.brand_name],
+    [t.model, car.model_name],
+    [t.trim, car.trim],
+    [t.generation, car.generation],
+    [t.fuelType, enumLabel(car.fuel_type, lang)],
+    [t.bodyType, enumLabel(car.body_type, lang)],
+    [t.color, enumLabel(car.color, lang)],
+    [t.driveType, enumLabel(car.drive_type, lang)],
+    [t.engineCc, car.engine_cc ? `${car.engine_cc} ${lang === "ar" ? "سم³" : "cc"}` : null],
+    [t.seatCount, car.seat_count != null ? String(car.seat_count) : null],
+    [t.ownerCount, car.owner_count != null ? String(car.owner_count) : null],
+    [t.vehicleType, car.is_new_vehicle ? t.newVehicle : t.usedVehicle],
+    [t.warrantyType, car.warranty_type],
+    [t.vin, car.vin],
+    [t.vehicleNo, car.vehicle_no],
+    [t.listingId, car.listing_id],
+    [t.source, car.source_code],
+    [
+      t.firstSeenAt,
+      car.first_seen_at
+        ? new Date(car.first_seen_at).toLocaleDateString(lang === "ar" ? "ar-SA" : "en-US")
+        : null,
+    ],
+  ];
+
   return (
     <MainLayout
       title={`${car.brand_name} ${car.model_name}`}
       subtitle={[car.trim, car.generation].filter(Boolean).join(" · ")}
-      badge={`${car.year} · ${car.source_code}${car.is_verified ? " · موثّقة" : ""}`}
+      badge={`${car.year} · ${car.source_code}${car.is_verified ? ` · ${lang === "ar" ? "موثّقة" : "Verified"}` : ""}`}
       mainPhoto={mainPhoto ? proxiedImage(mainPhoto) : null}
       thumbs={photos.slice(0, 12).map((p) => proxiedImage(p.thumb_url || p.url))}
+      lang={lang}
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           <section>
-            <h2 className="font-display text-xl font-bold border-r-4 border-steel pr-3 mb-6 text-ink">
-              نظرة عامة
+            <h2 className="font-display text-xl font-bold text-ink border-r-4 border-steel pr-3 mb-6">
+              {t.overview}
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <InfoTile label="سنة الصنع" value={String(car.year)} />
-              <InfoTile label="عداد المسافات" value={formatMileage(car.mileage)} />
-              <InfoTile label="ناقل الحركة" value={arLabel(car.transmission)} />
+              <InfoTile label={t.year} value={String(car.year)} />
+              <InfoTile label={t.mileage} value={formatMileage(car.mileage, lang)} />
+              <InfoTile label={t.transmission} value={enumLabel(car.transmission, lang)} />
               <InfoTile
-                label="الحالة"
-                value={car.is_available ? "متوفرة" : "غير متوفرة"}
+                label={t.status}
+                value={car.is_available ? t.available : t.unavailable}
               />
             </div>
           </section>
 
           <section>
-            <h2 className="font-display text-xl font-bold border-r-4 border-steel pr-3 mb-6 text-ink">
-              تفاصيل السيارة
+            <h2 className="font-display text-xl font-bold text-ink border-r-4 border-steel pr-3 mb-6">
+              {t.details}
             </h2>
-            <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2 bg-paper border border-line rounded-lg p-4">
-              <SpecRow label="الشركة المصنعة" value={car.brand_name} />
-              <SpecRow label="الموديل" value={car.model_name} />
-              {car.trim && <SpecRow label="الفئة" value={car.trim} />}
-              {car.generation && <SpecRow label="الجيل" value={car.generation} />}
-              <SpecRow label="نوع الوقود" value={arLabel(car.fuel_type)} />
-              <SpecRow label="نوع الهيكل" value={arLabel(car.body_type)} />
-              <SpecRow label="اللون" value={arLabel(car.color)} />
-              <SpecRow label="نظام الدفع" value={arLabel(car.drive_type)} />
-              {car.engine_cc ? (
-                <SpecRow label="سعة المحرك" value={`${car.engine_cc} سم³`} />
-              ) : null}
-              {car.seat_count != null && (
-                <SpecRow label="عدد المقاعد" value={String(car.seat_count)} />
-              )}
-              {car.owner_count != null && (
-                <SpecRow label="عدد الملاك" value={String(car.owner_count)} />
-              )}
-              <SpecRow
-                label="نوع السيارة"
-                value={car.is_new_vehicle ? "جديدة" : "مستعملة"}
-              />
-              {car.warranty_type && (
-                <SpecRow label="نوع الضمان" value={car.warranty_type} />
-              )}
-              {car.vin && <SpecRow label="رقم الهيكل (VIN)" value={car.vin} mono />}
-              {car.vehicle_no && (
-                <SpecRow label="رقم المركبة" value={car.vehicle_no} mono />
-              )}
-              {car.listing_id && (
-                <SpecRow label="رقم الإعلان" value={car.listing_id} mono />
-              )}
-              <SpecRow label="المصدر" value={car.source_code} />
-              {car.first_seen_at && (
-                <SpecRow
-                  label="أُدرجت في"
-                  value={new Date(car.first_seen_at).toLocaleDateString("ar-SA")}
-                />
-              )}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {specTiles
+                .filter(([, v]) => v)
+                .map(([label, value]) => (
+                  <div
+                    key={label}
+                    className="bg-ink/5 border border-line rounded-lg p-3 text-center"
+                  >
+                    <p className="text-steel text-xs mb-1">{label}</p>
+                    <p className="font-bold text-sm text-ink">{value}</p>
+                  </div>
+                ))}
             </div>
           </section>
 
           <section>
-            <h2 className="font-display text-xl font-bold border-r-4 border-steel pr-3 mb-6 text-ink">
-              الحالة والضمانات
+            <h2 className="font-display text-xl font-bold text-ink border-r-4 border-steel pr-3 mb-6">
+              {t.conditionAndWarranty}
             </h2>
             <div className="flex flex-wrap gap-2">
               <ConditionBadge
                 ok={!car.has_accident}
-                okLabel="لا يوجد حادث مسجل"
-                badLabel="يوجد حادث مسجل"
+                okLabel={t.noAccident}
+                badLabel={t.hasAccident}
               />
               <ConditionBadge
                 ok={!car.has_simple_repair}
-                okLabel="لا يوجد إصلاح بسيط"
-                badLabel="يوجد إصلاح بسيط مسجل"
+                okLabel={t.noSimpleRepair}
+                badLabel={t.hasSimpleRepair}
               />
               <ConditionBadge
                 ok={car.inspection_passed}
-                okLabel="اجتازت الفحص"
-                badLabel="الفحص غير متوفر"
+                okLabel={t.inspectionPassed}
+                badLabel={t.inspectionUnavailable}
               />
               <ConditionBadge
                 ok={!car.has_recall || car.recall_fulfilled}
-                okLabel="لا يوجد استدعاء مفتوح"
-                badLabel="يوجد استدعاء مفتوح"
+                okLabel={t.noOpenRecall}
+                badLabel={t.hasOpenRecall}
               />
             </div>
           </section>
 
           {car.features?.length > 0 && (
             <section>
-              <h2 className="font-display text-xl font-bold border-r-4 border-steel pr-3 mb-6 text-ink">
-                المزايا
+              <h2 className="font-display text-xl font-bold text-ink border-r-4 border-steel pr-3 mb-6">
+                {t.features}
               </h2>
               <div className="flex flex-wrap gap-2">
                 {car.features.map((f, i) => (
                   <span
                     key={i}
-                    className="border border-line bg-paper px-3 py-1 font-mono text-xs rounded text-ink"
+                    className="rounded-full bg-ink/5 border border-line px-3 py-1.5 text-sm text-ink"
                   >
                     {f}
                   </span>
@@ -208,47 +220,35 @@ export default async function CarDetailPage({
 
         <div className="lg:col-span-1">
           <div className="lg:sticky lg:top-6 space-y-4">
-            <div className="bg-ink rounded-2xl p-6 text-paper text-center">
-              <p className="opacity-70 text-sm mb-2">السعر</p>
+            <div className="bg-ink dark:bg-steel rounded-2xl p-6 text-paper text-center">
+              <p className="opacity-70 text-sm mb-2">{t.price}</p>
               <p className="font-display text-3xl font-bold" suppressHydrationWarning>
-                {formatPrice(car.price_usd, currency)}
+                {formatPrice(car.price_usd, currency, lang)}
               </p>
-              {car.price_original && car.price_original_currency && (
-                <p className="mt-1 font-mono text-xs opacity-60">
-                  السعر الأصلي: {car.price_original} {car.price_original_currency}
-                </p>
-              )}
             </div>
 
-            <div className="bg-paper border border-line rounded-2xl p-6">
+            <div className="bg-ink/5 border border-line rounded-2xl p-6">
               {car.has_valuation && car.analysis && (
-                <ValuationCard analysis={car.analysis} currency={currency} />
+                <ValuationCard analysis={car.analysis} currency={currency} lang={lang} t={t} />
               )}
+
               <a
                 href={buildWhatsAppLink({
                   brand: car.brand_name,
                   model: car.model_name,
                   year: car.year,
-                  price: formatPrice(car.price_usd, currency),
+                  price: formatPrice(car.price_usd, currency, lang),
                   listingId: car.listing_id,
+                  t,
                 })}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-xl mt-4 mb-3 text-center transition-colors"
               >
-                طلب عرض سعر للتصدير
+                {t.requestQuote}
               </a>
+              <ImportCostCalculator carPriceUsd={car.price_usd} lang={lang} />
 
-              {car.listing_url && (
-                <a
-                  href={car.listing_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block text-center font-mono text-xs text-steel underline"
-                >
-                  عرض الإعلان الأصلي
-                </a>
-              )}
             </div>
           </div>
         </div>
@@ -265,6 +265,7 @@ function MainLayout({
   badge,
   mainPhoto,
   thumbs,
+  lang,
   children,
 }: {
   title: string;
@@ -272,10 +273,13 @@ function MainLayout({
   badge?: string;
   mainPhoto: string | null;
   thumbs: string[];
+  lang: Lang;
   children: React.ReactNode;
 }) {
+  const t = dictionary[lang].carDetailPage;
+  const isRtl = lang === "ar";
   return (
-    <div dir="rtl" className="bg-paper min-h-screen text-ink">
+    <div dir={isRtl ? "rtl" : "ltr"} className="bg-paper min-h-screen text-ink">
       <CarGallery
         title={title}
         badge={badge}
@@ -289,7 +293,7 @@ function MainLayout({
           href="/cars"
           className="mb-6 inline-block font-mono text-xs uppercase tracking-wide text-steel hover:underline"
         >
-          → العودة إلى السيارات
+          {t.backToCars}
         </Link>
         {children}
       </div>
@@ -299,28 +303,9 @@ function MainLayout({
 
 function InfoTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-paper border border-line rounded-lg p-3 text-center">
+    <div className="bg-ink/5 border border-line rounded-lg p-3 text-center">
       <p className="text-steel text-xs mb-1">{label}</p>
       <p className="font-bold text-sm text-ink">{value}</p>
-    </div>
-  );
-}
-
-function SpecRow({
-  label,
-  value,
-  mono,
-}: {
-  label: string;
-  value: string;
-  mono?: boolean;
-}) {
-  return (
-    <div className="flex items-center justify-between border-b border-line py-3 last:border-0">
-      <span className="text-sm text-ink/60">{label}</span>
-      <span className={`text-sm font-semibold text-ink ${mono ? "font-mono" : ""}`}>
-        {value}
-      </span>
     </div>
   );
 }
@@ -349,57 +334,57 @@ function ConditionBadge({
 function ValuationCard({
   analysis,
   currency,
+  lang,
+  t,
 }: {
   analysis: ValuationAnalysis;
   currency: CurrencyCode;
+  lang: Lang;
+  t: typeof dictionary["ar"]["carDetailPage"];
 }) {
   return (
     <div className="border-b border-line pb-4 mb-4">
       <p className="font-mono text-[11px] uppercase tracking-wide text-steel">
-        تحليل سعر السوق
+        {t.marketAnalysis}
       </p>
       <p className="mt-1 font-display text-base font-semibold text-ink">
         {analysis.is_undervalued
-          ? "السعر أقل من متوسط السوق"
-          : arLabel(analysis.price_status || "سعر مطابق للسوق")}
+          ? t.belowMarketAverage
+          : enumLabel(analysis.price_status, lang) || t.marketMatch}
       </p>
       {typeof analysis.market_delta_pct === "number" && (
         <p className="mt-1 text-sm text-ink/70">
-          أقل بنسبة تقارب {Math.abs(analysis.market_delta_pct)}٪ من الإعلانات
-          المشابهة
+          {t.lowerByApprox} {Math.abs(analysis.market_delta_pct)}٪ {t.comparedToListings}
           {analysis.comparable_count
-            ? ` (مقارنةً بـ ${analysis.comparable_count} إعلان)`
+            ? ` (${t.comparedToCount} ${analysis.comparable_count} ${t.listingWord})`
             : ""}
           .
-        </p>
-      )}
-      {analysis.price_low != null && analysis.price_high != null && (
-        <p className="mt-1 font-mono text-xs text-ink/50" suppressHydrationWarning>
-          النطاق العادل المقدَّر: {formatPrice(analysis.price_low, currency)} –{" "}
-          {formatPrice(analysis.price_high, currency)}
         </p>
       )}
     </div>
   );
 }
+
 function buildWhatsAppLink({
   brand,
   model,
   year,
   price,
   listingId,
+  t,
 }: {
   brand: string;
   model: string;
   year: number;
   price: string;
   listingId?: string;
+  t: typeof dictionary["ar"]["carDetailPage"];
 }): string {
   const lines = [
-    "طلب عرض سعر للتصدير:",
-    `السيارة: ${brand} ${model} (${year})`,
-    `السعر: ${price}`,
-    listingId ? `رقم الإعلان: ${listingId}` : null,
+    t.whatsappQuoteTitle,
+    `${t.whatsappVehicle} ${brand} ${model} (${year})`,
+    `${t.whatsappPrice} ${price}`,
+    listingId ? `${t.whatsappListingId} ${listingId}` : null,
   ].filter(Boolean);
   const message = encodeURIComponent(lines.join("\n"));
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
@@ -408,41 +393,56 @@ function buildWhatsAppLink({
 function ManualCarDetail({
   car,
   currency,
+  lang,
 }: {
   car: any;
   currency: CurrencyCode;
+  lang: Lang;
 }) {
+  const t = dictionary[lang].carDetailPage;
+
+  const specTiles: [string, string | null | undefined][] = [
+    [t.mileage, formatMileage(car.mileage, lang)],
+    [t.fuelType, car.specs?.fuel],
+    [t.transmission, car.specs?.transmission],
+    [lang === "ar" ? "المحرك" : "Engine", car.specs?.engine],
+  ];
+
   return (
     <MainLayout
       title={`${car.make} ${car.model}`}
       subtitle={String(car.year)}
       mainPhoto={car.images?.[0] || null}
       thumbs={car.images?.slice(0, 12) || []}
+      lang={lang}
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           <section>
-            <h2 className="font-display text-xl font-bold border-r-4 border-steel pr-3 mb-6 text-ink">
-              تفاصيل السيارة
+            <h2 className="font-display text-xl font-bold text-ink border-r-4 border-steel pr-3 mb-6">
+              {t.details}
             </h2>
-            <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2 bg-paper border border-line rounded-lg p-4">
-              <SpecRow label="عداد المسافات" value={formatMileage(car.mileage)} />
-              {car.specs?.fuel && <SpecRow label="نوع الوقود" value={car.specs.fuel} />}
-              {car.specs?.transmission && (
-                <SpecRow label="ناقل الحركة" value={car.specs.transmission} />
-              )}
-              {car.specs?.engine && (
-                <SpecRow label="المحرك" value={car.specs.engine} />
-              )}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {specTiles
+                .filter(([, v]) => v)
+                .map(([label, value]) => (
+                  <div
+                    key={label}
+                    className="bg-ink/5 border border-line rounded-lg p-3 text-center"
+                  >
+                    <p className="text-steel text-xs mb-1">{label}</p>
+                    <p className="font-bold text-sm text-ink">{value}</p>
+                  </div>
+                ))}
             </div>
           </section>
 
           {car.description && (
             <section>
-              <h2 className="font-display text-xl font-bold border-r-4 border-steel pr-3 mb-6 text-ink">
-                ملاحظات البائع
+              <h2 className="font-display text-xl font-bold text-ink border-r-4 border-steel pr-3 mb-6">
+                {t.sellerNotes}
               </h2>
-              <p className="whitespace-pre-line text-sm leading-relaxed text-ink/80 bg-paper border border-line rounded-lg p-4">
+              <p className="whitespace-pre-line text-sm text-ink/80 bg-ink/5 border border-line rounded-lg p-4">
                 {car.description}
               </p>
             </section>
@@ -451,26 +451,28 @@ function ManualCarDetail({
 
         <div className="lg:col-span-1">
           <div className="lg:sticky lg:top-6">
-            <div className="bg-ink rounded-2xl p-6 text-paper text-center mb-4">
-              <p className="opacity-70 text-sm mb-2">السعر</p>
+            <div className="bg-ink dark:bg-steel rounded-2xl p-6 text-paper text-center mb-4">
+              <p className="opacity-70 text-sm mb-2">{t.price}</p>
               <p className="font-display text-3xl font-bold" suppressHydrationWarning>
-                {formatPrice(car.price, currency)}
+                {formatPrice(car.price, currency, lang)}
               </p>
             </div>
             <a
-
               href={buildWhatsAppLink({
                 brand: car.make,
                 model: car.model,
                 year: car.year,
-                price: formatPrice(car.price, currency),
+                price: formatPrice(car.price, currency, lang),
+                t,
               })}
               target="_blank"
               rel="noopener noreferrer"
               className="block w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-xl text-center transition-colors"
             >
-            طلب سعر عرض للتصدير
-             </a>
+              {t.requestQuote}
+            </a>
+            <ImportCostCalculator carPriceUsd={car.price} lang={lang} />
+
           </div>
         </div>
       </div>

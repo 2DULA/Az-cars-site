@@ -5,7 +5,7 @@ import { Camera, X, Send, Phone, Mail } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { dictionary } from "@/lib/i18n/dictionary";
 
-const WHATSAPP_NUMBER = "9665XXXXXXXX";
+const WHATSAPP_NUMBER = "966502650283";
 
 export default function PartsRequestPage() {
     const { lang } = useLanguage();
@@ -57,45 +57,44 @@ export default function PartsRequestPage() {
                             <label className="block text-sm font-semibold mb-2">{t.phone}</label>
                             <div className="relative">
                                 <Phone className={`absolute top-3 text-steel ${isRtl ? "right-3" : "left-3"}`} size={18} />
-                                <input
-                                    type="tel"
-                                    value={phone}
-                                    onChange={(e) => setPhone(e.target.value)}
-                                    required
-                                    className={`w-full bg-transparent text-ink border border-line py-2.5 outline-none focus:border-indigo-500 rounded ${isRtl ? "pl-3 pr-10" : "pr-3 pl-10"}`}
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-semibold mb-2">{t.emailOptional}</label>
-                            <div className="relative">
-                                <Mail className={`absolute top-3 text-steel ${isRtl ? "right-3" : "left-3"}`} size={18} />
-                                <input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className={`w-full bg-transparent text-ink border border-line py-2.5 outline-none focus:border-indigo-500 rounded ${isRtl ? "pl-3 pr-10" : "pr-3 pl-10"}`}
-                                />
-                            </div>
-                        </div>
+                        <input
+                            type="tel"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            required
+                            className={`w-full bg-transparent text-ink border border-line py-2.5 outline-none focus:border-steel rounded-xl ${isRtl ? "pl-3 pr-10" : "pr-3 pl-10"}`}
+                        />
                     </div>
+                </div>
+                <div>
+                    <label className="block text-sm font-semibold mb-2">{t.emailOptional}</label>
+                    <div className="relative">
+                        <Mail className={`absolute top-3 text-steel ${isRtl ? "right-3" : "left-3"}`} size={18} />
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className={`w-full bg-transparent text-ink border border-line py-2.5 outline-none focus:border-steel rounded-xl ${isRtl ? "pl-3 pr-10" : "pr-3 pl-10"}`}
+                        />
+                    </div>
+                </div>
+            </div>
 
-                    <div>
-                        <label className="block text-sm font-semibold mb-2">{t.vin}</label>
-                        <div className="flex gap-2">
-                            <input
-                                type="text"
-                                value={vin}
-                                onChange={(e) => setVin(e.target.value)}
-                                className="flex-1 bg-transparent text-ink border border-line px-3 py-2.5 outline-none focus:border-indigo-500 rounded"
-                                placeholder={t.vinPlaceholder}
-                            />
-                            {/* Updated button classes below */}
-                            <button
-                                type="button"
-                                onClick={() => fileInputRef.current?.click()}
-                                className="bg-transparent text-ink border border-line px-4 rounded flex items-center gap-2 hover:opacity-70 transition-opacity"
-                            >
+            <div>
+                <label className="block text-sm font-semibold mb-2">{t.vin}</label>
+                <div className="flex gap-2">
+                    <input
+                        type="text"
+                        value={vin}
+                        onChange={(e) => setVin(e.target.value)}
+                        className="flex-1 bg-transparent text-ink border border-line px-3 py-2.5 outline-none focus:border-steel rounded-xl"
+                        placeholder={t.vinPlaceholder}
+                    />
+                    <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="bg-transparent text-ink border border-line px-4 rounded-xl flex items-center gap-2 hover:opacity-70 transition-opacity"
+                    >
                                 <Camera size={18} /> {t.photo}
                             </button>
                             <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
@@ -116,31 +115,31 @@ export default function PartsRequestPage() {
 
                     <div>
                         <label className="block text-sm font-semibold mb-2">{t.carDescription}</label>
-                        <textarea
-                            value={carDescription}
-                            onChange={(e) => setCarDescription(e.target.value)}
-                            rows={2}
-                            required
-                            className="w-full bg-transparent text-ink border border-line px-3 py-2.5 outline-none focus:border-indigo-500 rounded"
-                            placeholder={t.carDescriptionPlaceholder}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-semibold mb-2">{t.partDescription}</label>
-                        <textarea
-                            value={partDescription}
-                            onChange={(e) => setPartDescription(e.target.value)}
-                            rows={3}
-                            required
-                            className="w-full bg-transparent text-ink border border-line px-3 py-2.5 outline-none focus:border-indigo-500 rounded"
-                            placeholder={t.partDescriptionPlaceholder}
-                        />
-                    </div>
+                    <textarea
+                        value={carDescription}
+                        onChange={(e) => setCarDescription(e.target.value)}
+                        rows={2}
+                        required
+                        className="w-full bg-transparent text-ink border border-line px-3 py-2.5 outline-none focus:border-steel rounded-xl"
+                        placeholder={t.carDescriptionPlaceholder}
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-semibold mb-2">{t.partDescription}</label>
+                    <textarea
+                        value={partDescription}
+                        onChange={(e) => setPartDescription(e.target.value)}
+                        rows={3}
+                        required
+                        className="w-full bg-transparent text-ink border border-line px-3 py-2.5 outline-none focus:border-steel rounded-xl"
+                        placeholder={t.partDescriptionPlaceholder}
+                    />
+                </div>
 
-                    <button
-                        type="submit"
-                        className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3.5 rounded-lg flex items-center justify-center gap-2 transition-all"
-                    >
+                <button
+                    type="submit"
+                    className="w-full bg-steel hover:bg-ink text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all"
+                >
                         <Send size={20} /> {t.submit}
                     </button>
                 </form>

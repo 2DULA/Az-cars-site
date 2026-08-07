@@ -104,7 +104,7 @@ export default function CarCard({ car }: { car: VehicleSummary }) {
         <div className="my-4 flex items-center gap-4 border-y border-line py-3 text-sm text-ink/75">
           <div className="flex items-center gap-1.5">
             <Gauge size={16} className="text-steel" />
-            <span className="font-mono">{formatMileage(car.mileage)}</span>
+            <span className="font-mono">{formatMileage(car.mileage, lang)}</span>
           </div>
         </div>
 

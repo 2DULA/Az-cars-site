@@ -32,6 +32,14 @@ const CURRENCY_SYMBOLS: Record<"SAR" | "USD" | "AED" | "EGP", string> = {
   EGP: "EGP",
 };
 
+// Korean auction prices arrive as raw KRW. Approximate rate -- KRW floats
+// against USD, update periodically for accuracy.
+const KRW_TO_USD = 1 / 1300; // ~1300 KRW per USD
+
+export function krwToUsd(krw: number): number {
+  return krw * KRW_TO_USD;
+}
+
 export function formatPrice(
   usdValue: number,
   currency: "SAR" | "USD" | "AED" | "EGP",
@@ -52,8 +60,10 @@ export function formatPrice(
   }
 }
 
-export function formatMileage(km: number): string {
-  return `${new Intl.NumberFormat("ar-SA").format(km)} كم`;
+export function formatMileage(km: number, lang: "ar" | "en" = "ar"): string {
+  const locale = lang === "ar" ? "ar-SA" : "en-US";
+  const unit = lang === "ar" ? "كم" : "km";
+  return `${new Intl.NumberFormat(locale).format(km)} ${unit}`;
 }
 
 // Arabic labels for the enum values returned by the Carapis API.

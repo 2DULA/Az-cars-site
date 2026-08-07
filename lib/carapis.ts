@@ -63,7 +63,7 @@ async function carapisFetch<T>(path: string, cacheSeconds = 0): Promise<T> {
   try {
     return await carapisFetchOnce<T>(path, cacheSeconds);
   } catch (err) {
-    if (err instanceof CarapisError && err.status === 404) throw err;
+    if (err instanceof CarapisError && (err.status === 404 || err.status === 429)) throw err;
     await new Promise((r) => setTimeout(r, 500));
     return carapisFetchOnce<T>(path, cacheSeconds);
   }

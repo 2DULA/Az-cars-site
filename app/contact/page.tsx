@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowUpLeft, ArrowUpRight, Phone, Mail, MapPin } from "lucide-react";
+import { ArrowUpLeft, ArrowUpRight, Phone, Mail, MapPin, Loader2 } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { dictionary } from "@/lib/i18n/dictionary";
 
@@ -15,11 +15,27 @@ export default function ContactPage() {
     const [email, setEmail] = useState("");
     const [message, setMessage] = useState("");
     const [submitted, setSubmitted] = useState(false);
+    const [error, setError] = useState("");
+    const [sending, setSending] = useState(false);
 
-    function handleSubmit(e: React.FormEvent) {
+    async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        console.log({ name, email, message });
-        setSubmitted(true);
+        setError("");
+        setSending(true);
+
+        try {
+            const res = await fetch("/api/contact", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, email, message }),
+            });
+            if (!res.ok) throw new Error();
+            setSubmitted(true);
+        } catch {
+            setError("Failed to send. Please try again.");
+        } finally {
+            setSending(false);
+        }
     }
 
     return (
@@ -123,11 +139,18 @@ export default function ContactPage() {
 
                             <button
                                 type="submit"
-                                className="flex w-full items-center justify-center gap-2 rounded-lg bg-steel py-3.5 font-mono text-sm font-bold text-paper transition-all hover:bg-ink hover:shadow-md"
+                                disabled={sending}
+                                className="flex w-full items-center justify-center gap-2 rounded-lg bg-steel py-3.5 font-mono text-sm font-bold text-paper transition-all hover:bg-ink hover:shadow-md disabled:opacity-60"
                             >
-                                {t.submit}
-                                <Arrow size={18} />
+                                {sending ? (
+                                    <><Loader2 size={18} className="animate-spin" /> Sending...</>
+                                ) : (
+                                    <>{t.submit}<Arrow size={18} /></>
+                                )}
                             </button>
+                            {error && (
+                                <p className="mt-3 text-sm text-red-500 text-center">{error}</p>
+                            )}
                         </form>
                     )}
                 </div>
