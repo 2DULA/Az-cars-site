@@ -72,11 +72,5 @@ async function refreshToken(currentRefreshToken: string): Promise<string> {
  */
 export async function ensureValidAccessToken(): Promise<string> {
     const auth = await getStoredAuth();
-    const expiresAt = new Date(auth.access_token_expires_at);
-    const oneHourFromNow = new Date(Date.now() + 60 * 60 * 1000);
-
-    if (expiresAt <= oneHourFromNow) {
-        return refreshToken(auth.refresh_token);
-    }
     return auth.access_token;
 }

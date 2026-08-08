@@ -82,8 +82,8 @@ def refresh_token(conn, current_refresh_token):
 def ensure_valid_token(conn):
     auth = get_stored_auth(conn)
     now = datetime.now(timezone.utc)
-    if auth["expires_at"] <= now + timedelta(hours=1):
-        print("Access token expiring soon or expired, refreshing...")
+    if auth["expires_at"] <= now:
+        print("Access token expired, refreshing...")
         return refresh_token(conn, auth["refresh_token"])
     return auth["access_token"]
 
