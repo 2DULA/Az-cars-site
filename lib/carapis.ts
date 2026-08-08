@@ -77,7 +77,7 @@ export async function fetchVehicles(
   const qs = buildQueryString(filters);
   return carapisFetch<PaginatedVehicles>(
     `/apix/catalog_api/vehicles/?${qs}`,
-    60
+    600
   );
 }
 

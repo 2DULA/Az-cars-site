@@ -9,7 +9,7 @@ import CarCard from "@/app/components/CarCard";
 import Filters from "@/app/components/Filters";
 import type { Metadata } from "next";
 
-export const revalidate = 60;
+export const revalidate = 600;
 export const metadata: Metadata = {
   title: "السيارات المتوفرة للتصدير | معرض العز",
   description:
