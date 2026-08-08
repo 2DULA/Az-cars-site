@@ -138,7 +138,7 @@ export default function PartsRequestPage() {
 
                 <button
                     type="submit"
-                    className="w-full bg-steel hover:bg-ink text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all"
+                    className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all"
                 >
                         <Send size={20} /> {t.submit}
                     </button>

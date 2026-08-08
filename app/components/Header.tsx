@@ -62,7 +62,7 @@ export default function Header() {
     };
 
     return (
-        <header className="sticky top-0 z-[60] border-b border-white/10 bg-paper/30 backdrop-blur-xl">
+        <header className="sticky top-0 z-[60] border-b border-white/10 bg-paper/70 backdrop-blur-xl">
             <div className="mx-auto flex w-full items-center justify-between px-6 py-4 2xl:px-12">
                 <div className="flex items-center gap-16">
                     <Link href="/" className="transition-transform hover:scale-105">
