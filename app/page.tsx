@@ -238,13 +238,14 @@ export default function Home() {
       params.set("min_year", selectedYear);
       params.set("max_year", selectedYear);
     }
-    const queryString = params.toString();
 
     if (activeTab === "auction") {
+      const queryString = params.toString();
       router.push(`/auctions${queryString ? `?${queryString}` : ""}`);
       return;
     }
     if (selectedModel) params.set("model", selectedModel.id);
+    const queryString = params.toString();
     router.push(`/cars${queryString ? `?${queryString}` : ""}`);
   };
 
