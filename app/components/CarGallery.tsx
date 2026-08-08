@@ -55,9 +55,11 @@ export default function CarGallery({
       else if (e.key === "ArrowLeft") goNext(); // RTL: left = next
     };
     window.addEventListener("keydown", onKey);
+    document.documentElement.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
     return () => {
       window.removeEventListener("keydown", onKey);
+      document.documentElement.style.overflow = "";
       document.body.style.overflow = "";
     };
   }, [lightboxOpen, goNext, goPrev]);
@@ -216,7 +218,7 @@ export default function CarGallery({
             alt={title}
             referrerPolicy="no-referrer"
             onClick={(e) => e.stopPropagation()}
-            className="max-w-[90vw] max-h-[85vh] object-contain select-none"
+            className="max-w-[96vw] max-h-[92vh] object-contain select-none"
           />
         </div>
       )}
